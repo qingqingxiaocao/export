@@ -1,12 +1,51 @@
-*.class
+package com.kaishengit.web;
 
-# Mobile Tools for Java (J2ME)
-.mtj.tmp/
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.List;
 
-# Package Files #
-*.jar
-*.war
-*.ear
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 
-# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
-hs_err_pid*
+import com.kaishengit.entity.Account;
+import com.kaishengit.entity.Records;
+import com.kaishengit.service.AccountService;
+
+
+public class ExportServlet extends HttpServlet {
+	private static final long serialVersionUID = 1L;
+
+	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		
+		HttpSession session = request.getSession();
+		Account account = (Account) session.getAttribute("account");
+		
+		List<Records> recordslist = new AccountService().findRecordsByAccount(account);
+		
+		response.setCharacterEncoding("UTF-8");
+		response.setContentType("text/plain;charset=UTF-8");
+		response.setHeader("Content-Disposition","attachment;filename=\"aaa.csv\"");
+		//response.setContentLength(arg0);
+		
+		PrintWriter writer = response.getWriter();
+		writer.print("日期,收入,支出,余额,备注\r\n");
+		
+		for(Records re : recordslist){
+			if(re.getType().equals("收")){
+				writer.print(re.getNiceDate()+","+re.getMoney()+",,"+re.getNowmoney()+","+(re.getComment()==null ? "" : re.getComment())+"\r\n");
+			}else{
+				writer.print(re.getNiceDate()+",,"+re.getMoney()+","+re.getNowmoney()+","+(re.getComment()==null ? "" : re.getComment())+"\r\n");
+
+			}
+		}
+		writer.flush();
+		writer.close();
+		
+		
+		
+	}
+
+}
